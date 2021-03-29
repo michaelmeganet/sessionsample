@@ -1,0 +1,841 @@
+<?php
+//initial nav active and visibility
+$mainactive = 'active';
+$maintrue = 'true';
+$priceactive = '';
+$pricetrue = 'false';
+$pmachactive = '';
+$pmachtrue = 'false';
+$finalactive = '';
+$finaltrue = 'false';
+//initials steps visibility
+$step2 = 'invisible';
+$step3 = 'invisible';
+$step4 = 'invisible';
+$step5 = 'invisible';
+$step6 = 'invisible';
+$step7 = 'invisible';
+$step8 = 'invisible';
+
+//end visibility
+
+function fetchMatDetail($mat) {
+    $qrDetMat = "SELECT * FROM material2020 WHERE materialcode = '$mat' AND company = 'PST'";
+    $objSQL = new SQL($qrDetMat);
+    $results = $objSQL->getResultOneRowArray();
+    return $results;
+}
+
+function fetchPMachList() {
+    $qrListProcess = "SELECT * FROM premachining ";
+    $objProcSQL = new SQL($qrListProcess);
+    $result = $objProcSQL->getResultRowArray();
+    return $result;
+}
+
+function fetchPMachDetail($pmid) {
+    $qrListPmach = "SELECT * FROM premachining WHERE pmid = $pmid";
+    $objPMach = new SQL($qrListPmach);
+    $result = $objPMach->getResultOneRowArray();
+    return $result;
+}
+
+if (isset($_POST['custype'])) {
+    $custype = $_POST['custype'];
+    $step2 = 'visible';
+}
+if (isset($_POST['quantity']) && isset($_POST['specialShapeOrder'])) {
+    $quantity = $_POST['quantity'];
+    $specialShapeOrder = $_POST['specialShapeOrder'];
+    $step3 = 'visible';
+}
+if (isset($_POST['mat'])) {
+    $mat = $_POST['mat'];
+    $results = fetchMatDetail($mat);
+    $materialname = $results['material'];
+    $category = $results['category'];
+    $Shape_Code = $results['Shape_Code'];
+    $tabletype = $results['tabletype'];
+
+    $step4 = 'visible';
+    $mainactive = '';
+    $maintrue = 'false';
+    $priceactive = 'active';
+    $pricetrue = 'true';
+}
+if (isset($_POST['dimensionProcess'])) {
+    $dimensionProcess = $_POST['dimensionProcess'];
+    $step5 = 'visible';
+} elseif (isset($_POST['totalweight']) && isset($_POST['totalprice'])) {
+    $dimensionProcess = 'true';
+    $dimensionPhase2 = 'true';
+    $step5 = 'visible';
+}
+
+if (isset($_POST['totalprice']) && isset($_POST['totalweight'])) {
+    #$dim_desc = $_POST['dim_desc'];
+    #$finishing_dim_desc = $_POST['finishing_dim_desc'];
+    $pricePerPCS = $_POST['pricePerPCS'];
+    $pricePerKG = $_POST['pricePerKG'];
+    $totalweight = $_POST['totalweight'];
+    $totalprice = $_POST['totalprice'];
+    $pmachList = fetchPMachList();
+
+    $step6 = 'visible';
+    $priceactive = '';
+    $pricetrue = 'false';
+    $pmachactive = 'active';
+    $pmachtrue = 'true';
+}
+
+if (isset($_POST['weight']) && isset($_POST['volume'])) {
+    $weight = $_POST['weight'];
+    $volume = $_POST['volume'];
+    $density = $_POST['density'];
+}
+
+if (isset($_POST['pricePerKG']) && isset($_POST['pricePerPCS'])) {
+    $pricePerPCS = $_POST['pricePerPCS'];
+    $pricePerKG = $_POST['pricePerKG'];
+}
+
+if (isset($_POST['pmid'])) {
+    $pmid = $_POST['pmid'];
+    $detailPmach = fetchPMachDetail($pmid);
+    $processcode = $detailPmach['process'];
+
+    $step7 = 'visible';
+}
+
+if (isset($_POST['totalpmachprice'])) {
+    $totalpmachprice = $_POST['totalpmachprice'];
+    $pmachprice = $_POST['pmachprice'];
+
+    $step8 = 'visible';
+    $pmachactive = '';
+    $pmachtrue = 'false';
+    $finalactive = 'active';
+    $finaltrue = 'true';
+}
+debug_to_console("step2 = " . $step2);
+debug_to_console("step3 = " . $step3);
+debug_to_console("step4 = " . $step4);
+debug_to_console("step5 = " . $step5);
+debug_to_console("step6 = " . $step6);
+debug_to_console("step7 = " . $step7);
+?>
+
+<nav>
+    <div class="nav nav-tabs nav-fill" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link <?php echo $mainactive; ?>"   id="nav-main-tab" data-toggle="tab" href="#nav-main"   role="tab" aria-controls="nav-main"   aria-selected="<?php echo $maintrue; ?>">Main</a>
+        <a class="nav-item nav-link  <?php echo $priceactive; ?>" id="nav-price-tab"  data-toggle="tab" href="#nav-price" role="tab" aria-controls="nav-price" aria-selected="<?php echo $pricetrue; ?>">Weight and Price</a>
+        <a class="nav-item nav-link <?php echo $pmachactive; ?>"    id="nav-pmach-tab"  data-toggle="tab" href="#nav-pmach" role="tab" aria-controls="nav-pmach" aria-selected="<?php echo $pmachtrue; ?>">Pre-Machining</a>
+        <a class="nav-item nav-link <?php echo $finalactive; ?>"    id="nav-final-tab"  data-toggle="tab" href="#nav-final" role="tab" aria-controls="nav-final" aria-selected="<?php echo $finaltrue; ?>">All Total</a>
+    </div>
+</nav>
+
+<div class="tab-content py-3 px-3 px-sm-0" id="nav-tabContent">
+    <!-- Begin Content for Navigation -->
+    <!-- Tab 1 -->
+    <div class="tab-pane fade show <?php echo $mainactive; ?>" id="nav-main" role="tabpanel" aria-labelledby="nav-main-tab">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active">Main</li>
+        </ol>
+        <!--Content-->
+        <div class="form-group text-right inline">
+            <form action="" method="post"><!--Reset to Main Page-->
+                <!--Lists of hidden inputs-->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input class="btn btn-outline-danger" type = "submit" name="reset_click" id="reset_click" value = "Reset Main">
+            </form>
+        </div>
+        <form action="" method="post">
+            <!--Lists of hidden inputs-->
+            <input type="hidden" name ="aid"         id="aid"         value ="<?php echo $aid; ?>" />
+            <input type="hidden" name ="bid"         id="bid"         value ="<?php echo $bid; ?>" />
+            <input type="hidden" name ="com"         id="com"         value ="<?php echo $com; ?>" />
+            <input type="hidden" name ="post_cid"    id ="post_cid"   value ="<?php echo $post_cid; ?>" />
+            <input type="hidden" name ="post_period" id="post_period" value ="<?php echo $post_period; ?>" />
+            <input type="hidden" name ="quotab"      id="quotab"      value ="<?php echo $quotab; ?>" />
+            <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+            <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+            <!-- Customer Type Area ~ Step 1-->
+            <div class="form-group row">
+                <div class="col-sm-3">
+                    <label class='control-label'>Customer Type:</label>
+                    <div class='input-group'>
+                        <?php
+                        if (!isset($custype)) {
+                            ?>
+                            <select class='custom-select' name='custype' id='custype'>
+                                <option value='local' selected>Local</option>
+                                <option value='outstation'>Outstation</option>
+                                <option value='melaka'>Melaka</option>
+                            </select>
+                        
+                            <?php
+                        } else {
+                            echo "<input type='text' class='form-control' id='custype' name='custype' readonly value='$custype' />";
+                        }
+                        ?>
+                    </div>
+                </div>
+                <hr/>
+
+            </div>
+            <!-- Quantity and Special Shape ~ Step 2 -->
+            <div class='form-group row'>
+                    <div class='col-sm-3'>
+                        <label class="control-label">Quantity</label>
+                        <?php
+                        if (!isset($quantity)) {
+                            ?>
+                            <input type='integer' class='form-control' id='quantity' name='quantity' value='1' placeholder='Quantity' required />
+                            <?php
+                        } else {
+                            echo "<input type='text' class='form-control' id='quantity' name='quantity' value='$quantity' readonly />";
+                        }
+                        ?>
+                    </div>
+                    <div class='col-sm-3'>
+                        <label class='control-label'>Special Shape Order</label>
+                        <?php
+                        if (!isset($specialShapeOrder)) {
+                            ?>
+                            <div class='input-group'>
+                                <select class='custom-select' name='specialShapeOrder' id='specialShapeOrder'>
+                                    <option value='NORMAL'>Normal Shape</option>
+                                    <option value='PLATEC'>Circular Plate Shape</option>
+                                    <option value='PLATECO'>Ring Plate Shape</option>
+                                </select>
+                                <div class='input-group-append'>
+                                    <input type='submit' class='btn btn-primary' id='submitSpecialShape' name='submitSpecialShape' value='Next'/>
+                                </div>
+                            </div>
+                            <?php
+                        } else {
+                            echo "<input type='text' class='form-control' id='specialShapeOrder' name='specialShapeOrder' value='$specialShapeOrder' readonly />";
+                        }
+                        ?>
+                    </div>
+                </div>
+            <!-- Select Material ~ Step 3-->
+            <?php
+            if ($step3 == 'visible') {
+                ?>
+                <div class='form-group row'>
+                    <?php
+                    if (!isset($mat)) {
+                        ?>
+                        <div class='col-sm-3'>
+                            <label class="control-label">Material :</label>
+                            <div class='input-group'>
+                                <select class='custom-select' name='mat' id='mat'>
+                                    <?php
+                                    if ($specialShapeOrder != 'NORMAL') {
+                                        $qrMat = "SELECT * FROM material2020 WHERE material LIKE '%ms plate%' AND company = 'PST' "
+                                                . "ORDER BY material";
+                                    } else {
+                                        $qrMat = "SELECT * FROM material2020 WHERE company='PST'"
+                                                . "ORDER BY material";
+                                    }
+                                    $objSQLMat = new SQL($qrMat);
+                                    $results = $objSQLMat->getResultRowArray();
+                                    foreach ($results as $rows) {
+                                        echo "<option value='" . $rows['materialcode'] . "'>" . $rows['material'] . "</option>";
+                                    }
+                                    ?>
+                                </select>
+                                <div class='input-group-append'>
+                                    <input type='submit' class='btn btn-primary' id='submitMat' name='submitMat' value='Next' /> 
+                                </div>
+                            </div>
+                        </div>
+                        <?php
+                    } else {
+                        ?>
+                        <div class='col-sm-3'>
+                            <label class="control-label">Material Code :</label>
+                            <input type='text' class='form-control' name='mat' id='mat' value='<?php echo $mat; ?>' readonly/>
+                        </div>
+
+                        <div class='col-sm-3'>
+                            <label class="control-label">Material Name:</label>
+                            <input type='text' class='form-control' name='materialname' id='materialname' value='<?php echo $materialname; ?>' readonly />
+                        </div>
+                        <?php
+                    }
+                    ?>
+
+                </div>
+                <?php
+            }
+            ?>
+        </form>
+    </div>
+    <!-- Tab 2 -->
+    <div class="tab-pane fade show <?php echo $priceactive; ?>" id="nav-price" role="tabpanel" aria-labelledby="nav-price-tab">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item" href ='#'>Main</li>
+            <li class="breadcrumb-item active">Price</li>
+        </ol>
+        <!--Content-->
+        <div class="form-group text-right inline">
+            <form action="" method="post"><!--Reset to Main Page-->
+                <!--Lists of hidden inputs-->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input class="btn btn-outline-danger" type = "submit" name="reset_click" id="reset_click" value = "Reset Main">
+            </form>
+            <form action="" method="post"> <!--Reset Weight and Price Page-->
+                <!--Lists of hidden inputs-->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input type="hidden" name ="custype"           id="custype"            value ="<?php echo $custype; ?>" />
+                <input type="hidden" name ="quantity"          id="quantity"           value ="<?php echo $quantity; ?>" />
+                <input type="hidden" name ="specialShapeOrder" id="specialShapeOrder"  value ="<?php echo $specialShapeOrder; ?>" />
+                <input type="hidden" name ="mat"               id="mat"                value ="<?php echo $mat; ?>" />
+                <input class="btn btn-outline-warning" type = "submit" name="reset_click" id="reset_click" value = "Reset Weight and Price">
+            </form>
+        </div>
+        <form action="" method="post">
+            <!--Lists of hidden inputs-->
+            <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+            <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+            <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+            <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+            <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+            <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+            <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+            <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+            <input type="hidden" name ="custype"           id="custype"            value ="<?php echo $custype; ?>" />
+            <input type="hidden" name ="quantity"          id="quantity"           value ="<?php echo $quantity; ?>" />
+            <input type="hidden" name ="specialShapeOrder" id="specialShapeOrder"  value ="<?php echo $specialShapeOrder; ?>" />
+            <input type="hidden" name ="mat"               id="mat"                value ="<?php echo $mat; ?>" />
+
+            <!-- Material Dimension ~ Step 4 -->
+            <?php
+            if ($step4 == 'visible') {
+                ?>
+                <div class='form-group'>
+                    <div class='row'>
+                        <div class='col-sm-3'>
+                            <label class="control-label">Material Code :</label>
+                            <input type='text' class='form-control' name='mat' id='mat' value='<?php echo $mat; ?>' readonly />
+                        </div>
+
+                        <div class='col-sm-3'>
+                            <label class="control-label">Material Name:</label>
+                            <input type='text' class='form-control' name='materialname' id='materialname' value='<?php echo $materialname; ?>' readonly />
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col-sm-6'>
+                            <?php echo "Shape_Code = $Shape_Code<br>"; ?>
+                            <span>&nbsp;</span>
+                            <span>&nbsp;</span>
+                            <span>&nbsp;</span>
+                        </div>
+                    </div>
+                    <?php include 'dimension-div.php' ?>
+                </div>
+                <?php
+            }
+            ?>
+            <!-- Price Calculation ~ Step 5 -->
+            <?php
+            if ($step5 == 'visible') {
+                include 'materialprice-calculation-div.php';
+                ?>
+                <div class='form-group'>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label class="control-label">Weight Per Pcs :</label>
+                            <input type='text' class='form-control' name='weight' id='weight' value='<?php echo $weight; ?>' readonly />
+                            <input type='hidden' name='volume' id='volume' value='<?php echo $volume; ?>' />
+                            <label class="control-label">Price Per Pcs :</label>
+                            <input type='text' class='form-control' name='pricePerPCS' id='pricePerPCS' value='<?php echo $pricePerPCS; ?>' readonly />
+                            <input type='hidden' name ='pricePerKG' id='pricePerKG' value='<?php echo $pricePerKG; ?>' />
+                            <input type='hidden' name='density'            id='density'            value='<?php echo $density; ?>' />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label">Total Weight :</label>
+                            <input type='text' class='form-control' name='totalweight' id='totalweight' value='<?php echo $totalweight; ?>' readonly />
+                            <label class="control-label">Total Price :</label>
+                            <input type='text' class='form-control' name='totalprice' id='totalprice' value='<?php echo $totalprice; ?>' readonly />
+                        </div>
+                    </div>
+                    <?php
+                    if ($step6 != 'visible') {
+                        ?>
+                        <div class="row">
+                            <div class='col-sm-12'>
+                                <input type='hidden' name='dim_desc' id='dim_desc' value='<?php echo $dim_desc; ?>' />
+                                <input type='hidden' name='finishing_dim_desc' id='finishing_dim_desc' value='<?php echo $finishing_dim_desc; ?>' />
+                                <input type='submit' class='btn btn-block btn-primary' name='submitMaterialPrice' id='submitMaterialPrice' value='Next' />
+                            </div>
+                        </div>
+                        <?php
+                    }
+                    ?>
+                </div>
+                <?php
+            }
+            ?>
+    </div>
+    <!-- Tab 3 -->
+    <div class="tab-pane fade show <?php echo $pmachactive; ?>" id="nav-pmach" role="tabpanel" aria-labelledby="nav-pmach-tab">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">Main</li>
+            <li class="breadcrumb-item">Price</li>
+            <li class="breadcrumb-item active">Pre-Machining</li>
+        </ol>
+        <!--Content-->        
+        <div class="form-group text-right inline">
+            <form action="" method="post"><!--Reset to Main Page-->
+                <!--Lists of hidden inputs-->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input class="btn btn-outline-danger" type = "submit" name="reset_click" id="reset_click" value = "Reset Main">
+            </form>
+            <form action='' method='post'><!--Reset PMach Page-->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input type="hidden" name ="custype"           id="custype"            value ="<?php echo $custype; ?>" />
+                <input type="hidden" name ="quantity"          id="quantity"           value ="<?php echo $quantity; ?>" />
+                <input type="hidden" name ="specialShapeOrder" id="specialShapeOrder"  value ="<?php echo $specialShapeOrder; ?>" />
+                <input type="hidden" name ="mat"               id="mat"                value ="<?php echo $mat; ?>" />
+                <input type='hidden' name ='category'          id='category'           value ='<?php echo $category; ?>' />
+                <input type="hidden" name ="Shape_Code"        id="Shape_Code"         value ='<?php echo $Shape_Code ?>' />
+                <input type="hidden" name ="tabletype"         id="tabletype"          value ='<?php echo $tabletype ?>' />
+                <?php include 'calculation/include-dimension-post.php'; ?>
+                <input type='hidden' name='mdt'                id='mdt'                value ='<?php echo $mdt; ?>'/>
+                <input type='hidden' name='mdw'                id='mdw'                value ='<?php echo $mdw; ?>'/>
+                <input type='hidden' name='mdl'                id='mdl'                value ='<?php echo $mdl; ?>'/>
+                <input type='hidden' name='fdt'                id='fdt'                value ='<?php echo $fdt; ?>'/>
+                <input type='hidden' name='fdw'                id='fdw'                value ='<?php echo $fdw; ?>'/>
+                <input type='hidden' name='fdl'                id='fdl'                value ='<?php echo $fdl; ?>'/>
+                <input type='hidden' name='dim_desc'           id='dim_desc'           value ='<?php echo $dim_desc; ?>' />
+                <input type='hidden' name='finishing_dim_desc' id='finishing_dim_desc' value ='<?php echo $finishing_dim_desc; ?>' />
+                <input type='hidden' name='density'            id='density'            value='<?php echo $density; ?>' />
+                <input type='hidden' name='weight'             id='weight'             value='<?php echo $weight; ?>' />
+                <input type='hidden' name='volume'             id='volume'             value='<?php echo $volume; ?>' />
+                <input type='hidden' name='pricePerPCS'        id='pricePerPCS'        value='<?php echo $pricePerPCS; ?>' />
+                <input type='hidden' name ='pricePerKG'        id='pricePerKG'         value='<?php echo $pricePerKG; ?>' />
+                <input type='hidden' name='totalweight'        id='totalweight'        value='<?php echo $totalweight; ?>' />
+                <input type='hidden' name='totalprice'         id='totalprice'         value='<?php echo $totalprice; ?>' />
+                <input class="btn btn-outline-warning" type = "submit" name="reset_click" id="reset_click" value = "Reset Premachining Page">
+            </form>
+        </div>
+        <!--Lists of hidden inputs-->
+        <form action='' method="post">
+            <?php
+            if ($step6 == 'visible') {
+                ?>
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input type="hidden" name ="custype"           id="custype"            value ="<?php echo $custype; ?>" />
+                <input type="hidden" name ="quantity"          id="quantity"           value ="<?php echo $quantity; ?>" />
+                <input type="hidden" name ="specialShapeOrder" id="specialShapeOrder"  value ="<?php echo $specialShapeOrder; ?>" />
+                <input type="hidden" name ="mat"               id="mat"                value ="<?php echo $mat; ?>" />
+                <input type='hidden' name ='category'          id='category'           value ='<?php echo $category; ?>' />
+                <input type="hidden" name ="Shape_Code"        id="Shape_Code"         value ='<?php echo $Shape_Code ?>' />
+                <input type="hidden" name ="tabletype"         id="tabletype"          value ='<?php echo $tabletype ?>' />
+                <?php include 'calculation/include-dimension-post.php'; ?>
+                <input type='hidden' name='mdt'                id='mdt'                value ='<?php echo $mdt; ?>'/>
+                <input type='hidden' name='mdw'                id='mdw'                value ='<?php echo $mdw; ?>'/>
+                <input type='hidden' name='mdl'                id='mdl'                value ='<?php echo $mdl; ?>'/>
+                <input type='hidden' name='fdt'                id='fdt'                value ='<?php echo $fdt; ?>'/>
+                <input type='hidden' name='fdw'                id='fdw'                value ='<?php echo $fdw; ?>'/>
+                <input type='hidden' name='fdl'                id='fdl'                value ='<?php echo $fdl; ?>'/>
+                <input type='hidden' name='dim_desc'           id='dim_desc'           value ='<?php echo $dim_desc; ?>' />
+                <input type='hidden' name='finishing_dim_desc' id='finishing_dim_desc' value ='<?php echo $finishing_dim_desc; ?>' />
+                <input type='hidden' name='density'            id='density'            value='<?php echo $density; ?>' />
+                <input type='hidden' name='weight'             id='weight'             value='<?php echo $weight; ?>' />
+                <input type='hidden' name='volume'             id='volume'             value='<?php echo $volume; ?>' />
+                <input type='hidden' name='pricePerPCS'        id='pricePerPCS'        value='<?php echo $pricePerPCS; ?>' />
+                <input type='hidden' name='pricePerKG'         id='pricePerKG'         value='<?php echo $pricePerKG; ?>' />
+                <input type='hidden' name='totalweight'        id='totalweight'        value='<?php echo $totalweight; ?>' />
+                <input type='hidden' name='totalprice'         id='totalprice'         value='<?php echo $totalprice; ?>' />
+
+                <!--Select Process Code ~ Step 6-->
+                <?php
+                #echo "Not yet finished....<br>";
+                ?>
+                <div class='form-group'>
+                    <div class='row'>
+                        <div class='col-sm-6'>
+                            <label class="control-label">Process Code</label>
+                            <?php
+                            if ($step7 != 'visible') {
+                                ?>
+                                <div class="input-group">
+                                    <?php
+                                    if ($Shape_Code == 'PLATEN' && $specialShapeOrder == 'NORMAL') {
+                                        echo '<select name="pmid" id="pmid" class="custom-select">';
+                                        foreach ($pmachList as $pmach_data) {
+                                            echo "<option value='" . $pmach_data['pmid'] . "'>" . $pmach_data['process'] . "</option>";
+                                        }
+                                        echo '</select>';
+                                    } else {
+                                        ?>
+                                        <input type='text' class='form-control' id='processcode' name='processcode' value='Basic Process' readonly />"
+                                        <input type='hidden' id='pmid' name='pmid' value='1' />
+                                        <?php
+                                    }
+                                    ?>
+                                    <div class='input-group-append'>
+                                        <input class='btn btn-primary' type='submit' id='submitProcess' name='submitProcess' value='Next' />
+                                    </div>
+                                </div>
+                                <?php
+                            } else {
+                                echo "<input type='text' class='form-control' id='processcode' name='processcode' value='$processcode' readonly />";
+                                echo "<input type='hidden' id='pmid' name='pmid' value='$pmid' /> ";
+                            }
+                            ?>
+
+                        </div>
+                    </div>
+                </div>
+                <?php
+            }
+            ?>
+            <!--PMach Calculation ~ Step 7-->
+            <?php
+            if ($step7 == 'visible') {
+                #echo "pmid = $pmid<br>";
+                if ($pmid != 1) {
+                    $pmach = pmach($mat, $dT, $dW, $dL, $pmid, $custype, $post_cid, $com);
+                    $totalpmach = $quantity * $pmach;
+                } else {
+                    $pmach = round('0', 1);
+                    $totalpmach = $quantity * $pmach;
+                }
+                ?>
+                <div class="form-group">
+                    <div class='row'>
+                        <div class="col-sm-6">
+                            <label class="control-label">Pre-Machining Price</label>
+                            <input type="text" class='form-control' id='pmachprice' name='pmachprice' value='<?php echo $pmach; ?>' readonly/>
+
+                        </div>
+                        <div class='col-sm-6'>
+                            <label class="control-label">Total Pre-Machining Price</label>
+                            <input type="text" class='form-control' id='totalpmachprice' name='totalpmachprice' value='<?php echo $totalpmach; ?>' readonly />
+                        </div>
+                        <?php
+                        if ($step8 != 'visible') {
+                            ?>
+                            <div class='col-sm-12'>
+                                <input type='submit' class='btn btn-primary btn-block' name='submitPmachPrice' id='submitPmachPrice' value='Next' />
+                            </div>
+                            <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+                <?php
+            }
+            ?>
+        </form>
+    </div>
+
+    <!-- Tab 4 -->
+    <div class="tab-pane fade show <?php echo $finalactive; ?>" id="nav-final" role="tabpanel" aria-labelledby="nav-final-tab">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">Main</li>
+            <li class="breadcrumb-item">Price</li>
+            <li class="breadcrumb-item">Pre-Machining</li>
+            <li class='breadcrumb-item active'>Total</li>
+        </ol>
+
+        <!-- Content -->        
+        <div class="form-group text-right inline">
+            <form action="" method="post"><!--Reset to Main Page-->
+                <!--Lists of hidden inputs-->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input class="btn btn-outline-danger" type = "submit" name="reset_click" id="reset_click" value = "Reset Main">
+            </form>
+            <form action='' method='post'><!--Reset Final Page Page-->
+                <!-- Lists of Hidden Inputs -->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input type="hidden" name ="custype"           id="custype"            value ="<?php echo $custype; ?>" />
+                <input type="hidden" name ="quantity"          id="quantity"           value ="<?php echo $quantity; ?>" />
+                <input type="hidden" name ="specialShapeOrder" id="specialShapeOrder"  value ="<?php echo $specialShapeOrder; ?>" />
+                <input type="hidden" name ="mat"               id="mat"                value ="<?php echo $mat; ?>" />
+                <input type='hidden' name ='category'          id='category'           value ='<?php echo $category; ?>' />
+                <input type="hidden" name ="Shape_Code"        id="Shape_Code"         value ='<?php echo $Shape_Code ?>' />
+                <input type="hidden" name ="tabletype"         id="tabletype"          value ='<?php echo $tabletype ?>' />
+                <?php include 'calculation/include-dimension-post.php'; ?>
+                <input type='hidden' name='mdt'                id='mdt'                value='<?php echo $mdt; ?>'/>
+                <input type='hidden' name='mdw'                id='mdw'                value='<?php echo $mdw; ?>'/>
+                <input type='hidden' name='mdl'                id='mdl'                value='<?php echo $mdl; ?>'/>
+                <input type='hidden' name='fdt'                id='fdt'                value='<?php echo $fdt; ?>'/>
+                <input type='hidden' name='fdw'                id='fdw'                value='<?php echo $fdw; ?>'/>
+                <input type='hidden' name='fdl'                id='fdl'                value='<?php echo $fdl; ?>'/>
+                <input type='hidden' name='dim_desc'           id='dim_desc'           value ='<?php echo $dim_desc; ?>' />
+                <input type='hidden' name='finishing_dim_desc' id='finishing_dim_desc' value ='<?php echo $finishing_dim_desc; ?>' />
+                <input type='hidden' name='pmid'               id='pmid'               value='<?php echo $pmid; ?>' />
+                <input type='hidden' name='processcode'        id='processcode'        value='<?php echo $processcode; ?>' />
+                <input type='hidden' name='density'            id='density'            value='<?php echo $density; ?>' />
+                <input type='hidden' name='weight'             id='weight'             value='<?php echo $weight; ?>' />
+                <input type='hidden' name='volume'             id='volume'             value='<?php echo $volume; ?>' />
+                <input type='hidden' name='pricePerPCS'        id='pricePerPCS'        value='<?php echo $pricePerPCS; ?>' />
+                <input type='hidden' name='pricePerKG'         id='pricePerKG'         value='<?php echo $pricePerKG; ?>' />
+                <input type='hidden' name='totalweight'        id='totalweight'        value='<?php echo $totalweight; ?>' />
+                <input type='hidden' name='totalprice'         id='totalprice'         value='<?php echo $totalprice; ?>' />
+                <input type="hidden" name='pmachprice'         id='pmachprice'         value='<?php echo $pmachprice; ?>' />
+                <input type="hidden" name='totalpmachprice'    id='totalpmachprice'    value='<?php echo $totalpmachprice; ?>' />
+                <input type='hidden' name='subtotalprice'      id='subtotalprice'      value='<?php echo $subtotalprice; ?>' />
+                <input class="btn btn-outline-warning" type = "submit" name="reset_click" id="reset_click" value = "Reset Total Page">
+            </form>
+        </div>
+        <form action='' method="POST">
+            <!-- Compile all Datas ~ Step 8 -->
+            <?php
+            if ($step8 == 'visible') {
+                $subtotalprice = $totalpmachprice + $totalprice;
+                ?>
+                <!-- Lists of Hidden Inputs -->
+                <input type="hidden" name ="aid"               id="aid"                value ="<?php echo $aid; ?>" />
+                <input type="hidden" name ="bid"               id="bid"                value ="<?php echo $bid; ?>" />
+                <input type="hidden" name ="com"               id="com"                value ="<?php echo $com; ?>" />
+                <input type="hidden" name ="post_cid"          id="post_cid"           value ="<?php echo $post_cid; ?>" />
+                <input type="hidden" name ="post_period"       id="post_period"        value ="<?php echo $post_period; ?>" />
+                <input type="hidden" name ="quotab"            id="quotab"             value ="<?php echo $quotab; ?>" />
+                <input type="hidden" name ="quono"             id="quono"              value ="<?php echo $quono; ?>" />
+                <input type="hidden" name ="itemno"            id="itemno"             value ="<?php echo $itemno; ?>" />
+                <input type="hidden" name ="custype"           id="custype"            value ="<?php echo $custype; ?>" />
+                <input type="hidden" name ="quantity"          id="quantity"           value ="<?php echo $quantity; ?>" />
+                <input type="hidden" name ="specialShapeOrder" id="specialShapeOrder"  value ="<?php echo $specialShapeOrder; ?>" />
+                <input type="hidden" name ="mat"               id="mat"                value ="<?php echo $mat; ?>" />
+                <input type='hidden' name ='category'          id='category'           value ='<?php echo $category; ?>' />
+                <input type="hidden" name ="Shape_Code"        id="Shape_Code"         value ='<?php echo $Shape_Code ?>' />
+                <input type="hidden" name ="tabletype"         id="tabletype"          value ='<?php echo $tabletype ?>' />
+                <?php include 'calculation/include-dimension-post.php'; ?>
+                <input type='hidden' name='mdt'                id='mdt'                value='<?php echo $mdt; ?>'/>
+                <input type='hidden' name='mdw'                id='mdw'                value='<?php echo $mdw; ?>'/>
+                <input type='hidden' name='mdl'                id='mdl'                value='<?php echo $mdl; ?>'/>
+                <input type='hidden' name='fdt'                id='fdt'                value='<?php echo $fdt; ?>'/>
+                <input type='hidden' name='fdw'                id='fdw'                value='<?php echo $fdw; ?>'/>
+                <input type='hidden' name='fdl'                id='fdl'                value='<?php echo $fdl; ?>'/>
+                <input type='hidden' name='dim_desc'           id='dim_desc'           value ='<?php echo $dim_desc; ?>' />
+                <input type='hidden' name='finishing_dim_desc' id='finishing_dim_desc' value ='<?php echo $finishing_dim_desc; ?>' />
+                <input type='hidden' name='pmid'               id='pmid'               value='<?php echo $pmid; ?>' />
+                <input type='hidden' name='processcode'        id='processcode'        value='<?php echo $processcode; ?>' />
+                <input type='hidden' name='density'            id='density'            value='<?php echo $density; ?>' />
+                <input type='hidden' name='weight'             id='weight'             value='<?php echo $weight; ?>' />
+                <input type='hidden' name='volume'             id='volume'             value='<?php echo $volume; ?>' />
+                <input type='hidden' name='pricePerPCS'        id='pricePerPCS'        value='<?php echo $pricePerPCS; ?>' />
+                <input type='hidden' name='pricePerKG'         id='pricePerKG'         value='<?php echo $pricePerKG; ?>' />
+                <input type='hidden' name='totalweight'        id='totalweight'        value='<?php echo $totalweight; ?>' />
+                <input type='hidden' name='totalprice'         id='totalprice'         value='<?php echo $totalprice; ?>' />
+                <input type="hidden" name='pmachprice'         id='pmachprice'         value='<?php echo $pmachprice; ?>' />
+                <input type="hidden" name='totalpmachprice'    id='totalpmachprice'    value='<?php echo $totalpmachprice; ?>' />
+                <input type='hidden' name='subtotalprice'      id='subtotalprice'      value='<?php echo $subtotalprice; ?>' />
+
+                <div class='form-group'>
+                    <div class='row' for='materialname'>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Material Name</label>
+                            <input type='text' class='form-control' value='<?php echo $materialname; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <!--Detail Order -->
+                    <div class='row' for='quantity'>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Quantity</label>
+                            <input type='text' class='form-control' value='<?php echo $quantity; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <div class='row' for='weightprice'>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Weight Per Pcs</label>
+                            <input type='text' class='form-control' value='<?php echo $weight; ?>' readonly style='background-color:#a8a8a8' />
+                            <label class='control-label'>Material Price Per Pcs</label>
+                            <input type='text' class='form-control' value='<?php echo $pricePerPCS ?>' readonly  style='background-color:#a8a8a8'/>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class='control-label'>Total Weight</label>
+                            <input type='text' class='form-control' value='<?php echo $totalweight; ?>' readonly style='background-color:#a8a8a8' />
+                            <label class='control-label'>Total Material Price </label>
+                            <input type='text' class='form-control' value='<?php echo $totalprice; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <span>&nbsp;</span>
+                    <div class='row' for='matDiscGST'>
+                        <div class='col-sm-6'>
+                            <div class="row">
+                                <div class='col-sm-6'>
+                                    <label class='control-label'>Discount</label>
+                                    <input type='text' class='form-control' id='discountmat' name='discountmat' value='<?php echo (isset($_POST['discountmat'])) ? $_POST['discountmat'] . "' readonly='readonly" : 0; ?>' placeholder="0" required />
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class='control-label'>GST (%)</label>
+                                    <input type='text' class='form-control' id='gstmat' name='gstmat' value='<?php echo (isset($_POST['gstmat'])) ? $_POST['gstmat'] . "' readonly='readonly" : 0; ?>' placeholder='0' required/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Subtotal Material Price</label>
+                            <input type='text' class='form-control' id='subtotalmat' name='subtotalmat' value='<?php echo $totalprice; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <span>&nbsp;</span>
+                    <div class='row' for='pmachprice'>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Premachining Cost Per Piece</label>
+                            <input type='text' class='form-control' value='<?php echo $pmachprice; ?>' readonly style='background-color:#a8a8a8'/>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class='control-label'>Total Premachining Cost</label>
+                            <input type='text' class='form-control' value='<?php echo $totalpmachprice; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <div class='row' for='pmachDiscGST'>
+                        <div class='col-sm-6'>
+                            <div class="row">
+                                <div class='col-sm-6'>
+                                    <label class='control-label'>Discount Premachining</label>
+                                    <input type='text' class='form-control' id='discountpmach' name='discountpmach' value='<?php echo (isset($_POST['discountpmach'])) ? $_POST['discountpmach'] . "' readonly='readonly" : 0; ?>' placeholder="0" required />
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class='control-label'>GST Premachining (%)</label>
+                                    <input type='text' class='form-control' id='gstpmach' name='gstpmach' value='<?php echo (isset($_POST['gstpmach'])) ? $_POST['gstpmach'] . "' readonly='readonly" : 0; ?>' placeholder='0' required/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Subtotal Premachining</label>
+                            <input type='text' class='form-control' id='subtotalpmach' name='subtotalpmach' value='<?php echo $totalpmachprice; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <span>&nbsp;</span>
+                    <div class='row' for='cncprice'>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>CNC Cost Per Piece</label>
+                            <input type='text' class='form-control' id='cncprice' name='cncprice' value='<?php echo (isset($_POST['cncprice'])) ? $_POST['cncprice'] . "' readonly='readonly" : 0; ?>' placeholder ='0' required/>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class='control-label'>Total CNC Cost</label>
+                            <input type='text' class='form-control' id='totalcncprice' name='totalcncprice' value='<?php echo (isset($_POST['totalcncprice'])) ? $_POST['totalcncprice'] : 0; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <div class='row' for='cncDiscGST'>
+                        <div class='col-sm-6'>
+                            <div class="row">
+                                <div class='col-sm-6'>
+                                    <label class='control-label'>Discount CNC</label>
+                                    <input type='text' class='form-control' id='discountcnc' name='discountcnc' value='<?php echo (isset($_POST['discountcnc'])) ? $_POST['discountcnc'] . "' readonly='readonly" : 0; ?>' placeholder="0" required />
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class='control-label'>GST CNC (%)</label>
+                                    <input type='text' class='form-control' id='gstcnc' name='gstcnc' value='<?php echo (isset($_POST['gstcnc'])) ? $_POST['gstcnc'] . "' readonly='readonly" : 0; ?>' placeholder='0' required/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Subtotal CNC</label>
+                            <input type='text' class='form-control' id='subtotalcnc' name='subtotalcnc' value='<?php echo (isset($_POST['subtotalcnc'])) ? $_POST['subtotalcnc'] : 0; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+
+                    <span>&nbsp;</span>
+                    <div class='row' for='cncprice'>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Other Costs</label>
+                            <input type='text' class='form-control' id='otherprice' name='otherprice' value='<?php echo (isset($_POST['otherprice'])) ? $_POST['otherprice'] . "' readonly='readonly" : 0; ?>' placeholder ='0' required/>
+                        </div>
+                    </div>
+                    <div class='row' for='cncDiscGST'>
+                        <div class='col-sm-6'>
+                            <div class="row">
+                                <div class='col-sm-6'>
+                                    <label class='control-label'>Discount Other</label>
+                                    <input type='text' class='form-control' id='discountother' name='discountother' value='<?php echo (isset($_POST['discountother'])) ? $_POST['discountother'] . "' readonly='readonly" : 0; ?>' placeholder="0" required />
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class='control-label'>GST Other (%)</label>
+                                    <input type='text' class='form-control' id='gstother' name='gstother' value='<?php echo (isset($_POST['gstother'])) ? $_POST['gstother'] . "' readonly='readonly" : 0; ?>' placeholder='0' required/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='col-sm-6'>
+                            <label class='control-label'>Subtotal Other</label>
+                            <input type='text' class='form-control' id='subtotalother' name='subtotalother' value='<?php echo (isset($_POST['subtotalother'])) ? $_POST['subtotalother'] : 0; ?>' readonly style='background-color:#a8a8a8' />
+                        </div>
+                    </div>
+                    <span>&nbsp;</span>
+                    <div class='row text-left ' for='totalprice'>
+                        <div class='col-sm-6 my-auto ' >
+                        </div>
+                        <div class="col-sm-6 my-auto">
+                            <div class="input-group my-auto">
+                                <div class="input-group-prepend">
+                                    <label class='btn btn-primary disabled' style=' vertical-align: middle'>Sub Total :</label> 
+                                </div>
+                                <input type='text' class='form-control ' style='font-weight:bolder;background-color:#69db95' id='subtotalamount' name='subtotalamount' value='<?php echo $subtotalprice; ?>' readonly  />
+                            </div>
+                            <button type='button' class="btn btn-primary btn-block" onclick="recalculateprice()">Recalculate Final Price</button>
+                        </div>
+                    </div>
+                    <span>&nbsp;</span>
+                    <input type='submit' class="btn btn-primary btn-block" id='submitTotal' name='submitTotal' value='Submit'/>
+                </div>
+                <?php
+            }
+            ?>
+        </form>
+    </div>

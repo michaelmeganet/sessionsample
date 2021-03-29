@@ -1,0 +1,20 @@
+{"Form data":{
+"post_cid":"21483+",
+"post_period":"2003+",
+"quotab":["quotation_pst_2003+",
+"quotation_pst_2003+"],
+"cust_type":"local",
+"quantity":"10",
+"mat":"12379p",
+"mat_name":"1.2379+-+Plate+(SKD+11)",
+"materialcode":"12379p",
+"thick":"15",
+"width":"120",
+"length":"130",
+"fThick":"10",
+"fWidth":"115",
+"fLength":"125",
+"calculate_weight":
+"Submit","cid":"21483+",
+"matname":"+","period":"2003+"},
+"Request payload":{"EDITOR_CONFIG":{"text":"post_cid=21483+&post_period=2003+&quotab=quotation_pst_2003+&cust_type=local&quantity=10&mat=12379p&mat_name=1.2379+-+Plate+%28SKD+11%29&materialcode=12379p&thick=15&width=120&length=130&fThick=10&fWidth=115&fLength=125&calculate_weight=Submit&cid=21483+&matname=+&period=2003+&quotab=quotation_pst_2003+","mode":"text/html"}}}

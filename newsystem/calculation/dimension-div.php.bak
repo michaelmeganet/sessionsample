@@ -1,0 +1,397 @@
+
+<div class='row'>
+    <?php
+
+    function checkTableExist($matTable) {
+        $qrTbl = "SHOW TABLES LIKE '%$matTable%'";
+        $objTbl = new SQL($qrTbl);
+        $result = $objTbl->getResultOneRowArray();
+        return $result;
+    }
+
+    function getThickList($matTable) {
+        $qrData = "SELECT DISTINCT thickness FROM $matTable";
+        $objData = new SQL($qrData);
+        $result = $objData->getResultRowArray();
+        return $result;
+    }
+
+    function getWidthList($matTable, $thickness) {
+        $qrData = "SELECT DISTINCT width FROM $matTable WHERE thickness = $thickness";
+        $objData = new SQL($qrData);
+        $result = $objData->getResultRowArray();
+        return $result;
+    }
+
+    if ($custype == 'outstation' || $custype == 'melaka') {
+        $matTable = $mat . "_" . $custype;
+    } else if ($custype == 'local') {
+        $matTable = $mat . "_pst_" . $post_cid;
+    }
+
+    $result = checkTableExist($matTable);
+
+    if (empty($result)) {
+        $matTable = $mat;
+        $result = checkTableExist($matTable);
+        if (empty($result)) {
+            $result = 'empty';
+        }
+    }
+    if ($result != 'empty') {
+        $row_data = getThickList($matTable);
+        #echo "\$matTable = $matTable<br>";
+        echo "<datalist id=thicklist>";
+        foreach ($row_data as $rows) {
+            echo "<option>" . $rows['thickness'] . "</option>";
+        }
+        echo "</datalist>";
+    }
+    if (isset($_POST['dimensionPhase2'])) {
+        //get all possible Thickness $_POST values
+        $dimensionPhase2 = $_POST['dimensionPhase2'];
+        $thicknessArray = array('dT', 'dW1', 'dPHI', 'dHEX', 'dOD');
+        foreach ($thicknessArray as $thicknessKey => $thicknessData) {
+            if (isset($_POST[$thicknessData])) {
+                $thickness = $_POST[$thicknessData];
+                #echo "thickness = $thickness<br>";
+                break;
+            }
+        }
+        #echo "test1<br>\$matTable=$matTable<br>";
+        $row_width_data = getWidthList($matTable, $thickness);
+        #print_r($row_width_data);
+        if (!empty($row_width_data)) {
+            //check if contains 'x'
+            $checkWidth = stripos($row_width_data[0]['width'], 'x');
+            if (isset($checkWidth)) {
+                echo "<datalist id=W1list>";
+                foreach ($row_width_data as $width_rows) {
+                    # echo "$width_rows<br>";
+                    $width = explode('x', strtolower(trim($width_rows['width'])));
+                    echo "<option>" . floatval($width[0]) . "</option>";
+                }
+                echo "</datalist>";
+                echo "<datalist id=W2list>";
+                foreach ($row_width_data as $width_rows) {
+                    # echo "$width_rows<br>";
+                    $width = explode('x', strtolower(trim($width_rows['width'])));
+                    echo "<option>" . floatval($width[1]) . "</option>";
+                }
+                echo "</datalist>";
+            } else {
+                echo "<datalist id=W1list>";
+                foreach ($row_width_data as $width_rows) {
+                    # echo "$width_rows<br>";
+                    echo "<option>" . floatval($width_rows['width']) . "</option>";
+                }
+                echo "</datalist>";
+            }
+        }
+    }
+    switch ($Shape_Code) {
+        case 'PLATEN':
+            if ($specialShapeOrder == 'NORMAL') {
+                ?>
+                <div class = 'col-sm-6'>
+                    <h4>Dimension</h4>
+                    <label class = "label-control">Thickness</label>
+                    <input type = 'text' list='thicklist' class = "form-control" id = 'dT' name = 'dT' <?php echo (isset($_POST['dT'])) ? "value = '" . $_POST['dT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <?php if (isset($dimensionPhase2)) { ?>
+                        <label class = "label-control">Width</label>
+                        <input type = 'text' list='W1list' class = "form-control" id = 'dW' name = 'dW' <?php echo (isset($_POST['dW'])) ? "value = '" . $_POST['dW'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                        <label class = "label-control">Length</label>
+                        <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <?php } ?>
+                </div>
+                <div class = 'col-sm-6'>
+                    <h4>Finishing Dimension</h4>
+                    <label class = "label-control">Thickness</label>
+                    <input type = 'text' class = "form-control" id = 'fT' name = 'fT' <?php echo (isset($_POST['fT'])) ? "value = '" . $_POST['fT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required  />
+                    <?php if (isset($dimensionPhase2)) { ?>
+                        <label class = "label-control">Width</label>
+                        <input type = 'text' class = "form-control" id = 'fW' name = 'fW' <?php echo (isset($_POST['fW'])) ? "value = '" . $_POST['fW'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                        <label class = "label-control">Length</label>
+                        <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <?php } ?>
+                </div>
+                <?php
+            } else {
+                echo "Not yet implemented, Line 120 on dimension-div.php<br>";
+            }
+            break;
+        case 'SS':
+            ?>
+            <div class = 'col-sm-6'>
+                <h4>Dimension</h4>
+                <label class = "label-control">Width 1</label>
+                <input type = 'text' list='thicklist' class = "form-control" id = 'dW1' name = 'dW1' <?php echo (isset($_POST['dW1'])) ? "value = '" . $_POST['dW1'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Width 2</label>
+                    <input type = 'text' list='W1list' class = "form-control" id = 'dW2' name = 'dW2' <?php echo (isset($_POST['dW2'])) ? "value = '" . $_POST['dW2'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'dL' name = 'dL'  <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <div class = 'col-sm-6'>
+                <h4>Finishing Dimension</h4>
+                <label class = "label-control">Width 1</label>
+                <input type = 'text' class = "form-control" id = 'fW1' name = 'fW1' <?php echo (isset($_POST['fW1'])) ? "value = '" . $_POST['fW1'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Width 2</label>
+                    <input type = 'text' class = "form-control" id = 'fW2' name = 'fW2' <?php echo (isset($_POST['fW2'])) ? "value = '" . $_POST['fW2'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <?php
+            break;
+        case 'O':
+            ?>
+            <div class = 'col-sm-6'>
+                <h4>Dimension</h4>
+                <label class = "label-control">PHI (Diameter)</label>
+                <input type = 'text' list='thicklist' class = "form-control" id = 'dPHI' name = 'dPHI' <?php echo (isset($_POST['dPHI'])) ? "value = '" . $_POST['dPHI'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <div class = 'col-sm-6'>
+                <h4>Finishing Dimension</h4>
+                <label class = "label-control">PHI (Diameter)</label>
+                <input type = 'text' class = "form-control" id = 'fPHI' name = 'fPHI' <?php echo (isset($_POST['fPHI'])) ? "value = '" . $_POST['fPHI'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <?php
+            break;
+        case 'HEX':
+            ?>
+            <div class = 'col-sm-6'>
+                <h4>Dimension</h4>
+                <label class = "label-control">HEX (Thickness)</label>
+                <input type = 'text' list='thicklist' class = "form-control" id = 'dHEX' name = 'dHEX' <?php echo (isset($_POST['dHEX'])) ? "value = '" . $_POST['dHEX'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <div class = 'col-sm-6'>
+                <h4>Finishing Dimension</h4>
+                <label class = "label-control">HEX (Thickness)</label>
+                <input type = 'text' class = "form-control" id = 'fHEX' name = 'fHEX' <?php echo (isset($_POST['fHEX'])) ? "value = '" . $_POST['fHEX'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <?php
+            break;
+        case 'HS':
+            ?>
+            <div class = 'col-sm-6'>
+                <h4>Dimension</h4>
+                <label class = "label-control">Thickness</label>
+                <input type = 'text' list='thicklist' class = "form-control" id = 'dT' name = 'dT' <?php echo (isset($_POST['dT'])) ? "value = '" . $_POST['dT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Width 1</label>
+                    <input type = 'text' list='W1list' class = "form-control" id = 'dW1' name = 'dW1' <?php echo (isset($_POST['dW1'])) ? "value = '" . $_POST['dW1'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Width 2</label>
+                    <input type = 'text' list='W2list' class = "form-control" id = 'dW2' name = 'dW2' <?php echo (isset($_POST['dW2'])) ? "value = '" . $_POST['dW2'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <div class = 'col-sm-6'>
+                <h4>Finishing Dimension</h4>
+                <label class = "label-control">Thickness</label>
+                <input type = 'text' list='thicklist' class = "form-control" id = 'fT' name = 'fT' <?php echo (isset($_POST['fT'])) ? "value = '" . $_POST['fT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Width 1</label>
+                    <input type = 'text' class = "form-control" id = 'fW1' name = 'fW1' <?php echo (isset($_POST['fW1'])) ? "value = '" . $_POST['fW1'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Width 2</label>
+                    <input type = 'text' class = "form-control" id = 'fW2' name = 'fW2' <?php echo (isset($_POST['fW2'])) ? "value = '" . $_POST['fW2'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <?php
+            break;
+        case 'HP':
+            ?>
+            <div class = 'col-sm-6'>
+                <h4>Dimension</h4>
+                <label class = "label-control">Outer Diameter (OD)</label>
+                <input type = 'text' list='thicklist' class = "form-control" id = 'dOD' name = 'dOD' <?php echo (isset($_POST['dOD'])) ? "value = '" . $_POST['dOD'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Inner Diameter (ID)</label>
+                    <input type = 'text' list='W1list' class = "form-control" id = 'dID' name = 'dID' <?php echo (isset($_POST['dID'])) ? "value = '" . $_POST['dID'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <div class = 'col-sm-6'>
+                <h4>Finishing Dimension</h4>
+                <label class = "label-control">Outer Diameter (OD)</label>
+                <input type = 'text' class = "form-control" id = 'fOD' name = 'fOD' <?php echo (isset($_POST['fOD'])) ? "value = '" . $_POST['fOD'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Inner Diameter (ID)</label>
+                    <input type = 'text' class = "form-control" id = 'fID' name = 'fID' <?php echo (isset($_POST['fID'])) ? "value = '" . $_POST['fID'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <?php
+            break;
+        case 'FLAT':
+            ?>
+            <div class = 'col-sm-6'>
+                <h4>Dimension</h4>
+                <label class = "label-control">Thickness</label>
+                <input type = 'text' list='thicklist' class = "form-control" id = 'dT' name = 'dT' <?php echo (isset($_POST['dT'])) ? "value = '" . $_POST['dT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Width</label>
+                    <input type = 'text' list='W1list' class = "form-control" id = 'dW' name = 'dW' <?php echo (isset($_POST['dW'])) ? "value = '" . $_POST['dW'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+            <div class = 'col-sm-6'>
+                <h4>Finishing Dimension</h4>
+                <label class = "label-control">Thickness</label>
+                <input type = 'text' class = "form-control" id = 'fT' name = 'fT' <?php echo (isset($_POST['fT'])) ? "value = '" . $_POST['fT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php if (isset($dimensionPhase2)) { ?>
+                    <label class = "label-control">Width</label>
+                    <input type = 'text' class = "form-control" id = 'fW' name = 'fW' <?php echo (isset($_POST['fW'])) ? "value = '" . $_POST['fW'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                    <label class = "label-control">Length</label>
+                    <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <?php } ?>
+            </div>
+        </div>
+        <?php
+        break;
+    case 'A':
+        ?>
+        <div class = 'col-sm-6'>
+            <h4>Dimension</h4>
+            <label class = "label-control">Thickness</label>
+            <input type = 'text' list='thicklist' class = "form-control" id = 'dT' name = 'dT' <?php echo (isset($_POST['dT'])) ? "value = '" . $_POST['dT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <?php if (isset($dimensionPhase2)) { ?>
+                <label class = "label-control">Width 1</label>
+                <input type = 'text' list='W1list' class = "form-control" id = 'dW1' name = 'dW1' <?php echo (isset($_POST['dW1'])) ? "value = '" . $_POST['dW1'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <label class = "label-control">Width 2</label>
+                <input type = 'text' list='W2list' class = "form-control" id = 'dW2' name = 'dW2' <?php echo (isset($_POST['dW2'])) ? "value = '" . $_POST['dW2'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <label class = "label-control">Length</label>
+                <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <?php } ?>
+        </div>
+        <div class = 'col-sm-6'>
+            <h4>Finishing Dimension</h4>
+            <label class = "label-control">Thickness</label>
+            <input type = 'text' class = "form-control" id = 'fT' name = 'fT' <?php echo (isset($_POST['fT'])) ? "value = '" . $_POST['fT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <?php if (isset($dimensionPhase2)) { ?>
+                <label class = "label-control">Width 1</label>
+                <input type = 'text' class = "form-control" id = 'fW1' name = 'fW1' <?php echo (isset($_POST['fW1'])) ? "value = '" . $_POST['fW1'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <label class = "label-control">Width 2</label>
+                <input type = 'text' class = "form-control" id = 'fW2' name = 'fW2' <?php echo (isset($_POST['fW2'])) ? "value = '" . $_POST['fW2'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+                <label class = "label-control">Length</label>
+                <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <?php } ?>
+        </div>
+        <?php
+        break;
+    case 'C':
+        ?>
+        <div class = 'col-sm-6'>
+            <h4>Dimension</h4>
+            <h6 style='color:red'>Warning !, This is not fully implemented</h6>
+            <label class = "label-control">Vertical Rib (H)</label>
+            <input type = 'text' class = "form-control" id = 'dH' name = 'dH' <?php echo (isset($_POST['dH'])) ? "value = '" . $_POST['dH'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Horizontal Rib (A)</label>
+            <input type = 'text' class = "form-control" id = 'dA' name = 'dA' <?php echo (isset($_POST['dA'])) ? "value = '" . $_POST['dA'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Vertical Thickness (ribT)</label>
+            <input type = 'text' class = "form-control" id = 'dRibT' name = 'dRibT' <?php echo (isset($_POST['dRibT'])) ? "value = '" . $_POST['dRibT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Horizontal Thickness (T)</label>
+            <input type = 'text' class = "form-control" id = 'dT' name = 'dT' <?php echo (isset($_POST['dT'])) ? "value = '" . $_POST['dT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Length</label>
+            <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+        </div>
+        <div class = 'col-sm-6'>
+            <h4>Finishing Dimension</h4>
+            <h6 style='color:red'>Warning !, This is not fully implemented</h6>
+            <label class = "label-control">Vertical Rib (H)</label>
+            <input type = 'text' class = "form-control" id = 'fH' name = 'fH' <?php echo (isset($_POST['fH'])) ? "value = '" . $_POST['fH'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Horizontal Rib (A)</label>
+            <input type = 'text' class = "form-control" id = 'fA' name = 'fA' <?php echo (isset($_POST['fA'])) ? "value = '" . $_POST['fA'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Vertical Thickness (ribT)</label>
+            <input type = 'text' class = "form-control" id = 'fRibT' name = 'fRibT' <?php echo (isset($_POST['fRibT'])) ? "value = '" . $_POST['fRibT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Horizontal Thickness (T)</label>
+            <input type = 'text' class = "form-control" id = 'fT' name = 'fT' <?php echo (isset($_POST['fT'])) ? "value = '" . $_POST['fT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Length</label>
+            <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+        </div>
+        <?php
+        break;
+    case 'LIP':
+        ?>
+        <div class = 'col-sm-6'>
+            <h4>Dimension</h4>
+            <label class = "label-control">Vertical Rib (H)</label>
+            <h6 style='color:red'>Warning !, This is not fully implemented</h6>
+            <input type = 'text' class = "form-control" id = 'dH' name = 'dH' <?php echo (isset($_POST['dH'])) ? "value = '" . $_POST['dH'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Horizontal Rib (A)</label>
+            <input type = 'text' class = "form-control" id = 'dA' name = 'dA' <?php echo (isset($_POST['dA'])) ? "value = '" . $_POST['dA'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Lip Side (C)</label>
+            <input type = 'text' class = "form-control" id = 'dC' name = 'dC' <?php echo (isset($_POST['dC'])) ? "value = '" . $_POST['dC'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Thickness</label>
+            <input type = 'text' class = "form-control" id = 'dT' name = 'dT' <?php echo (isset($_POST['dT'])) ? "value = '" . $_POST['dT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Length</label>
+            <input type = 'text' class = "form-control" id = 'dL' name = 'dL' <?php echo (isset($_POST['dL'])) ? "value = '" . $_POST['dL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+        </div>
+        <div class = 'col-sm-6'>
+            <h4>Finishing Dimension</h4>
+            <label class = "label-control">Vertical Rib (H)</label>
+            <h6 style='color:red'>Warning !, This is not fully implemented</h6>
+            <input type = 'text' class = "form-control" id = 'fH' name = 'fH' <?php echo (isset($_POST['fH'])) ? "value = '" . $_POST['fH'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Horizontal Rib (A)</label>
+            <input type = 'text' class = "form-control" id = 'fA' name = 'fA' <?php echo (isset($_POST['fA'])) ? "value = '" . $_POST['fA'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Lip Side (C)</label>
+            <input type = 'text' class = "form-control" id = 'fC' name = 'fC' <?php echo (isset($_POST['fC'])) ? "value = '" . $_POST['fC'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Thickness</label>
+            <input type = 'text' class = "form-control" id = 'fT' name = 'fT' <?php echo (isset($_POST['fT'])) ? "value = '" . $_POST['fT'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+            <label class = "label-control">Length</label>
+            <input type = 'text' class = "form-control" id = 'fL' name = 'fL' <?php echo (isset($_POST['fL'])) ? "value = '" . $_POST['fL'] . "' style='background-color:lightgrey' readonly" : "value=''"; ?> required />
+        </div>
+        <?php
+        break;
+}
+?>
+</div>
+<div class=" row text-right">
+    <?php if (!isset($dimensionPhase2)) {
+        ?>
+        <div class='col'>
+            <input type="hidden" id="dimensionPhase2" name='dimensionPhase2' value ='true' />
+            <input type='submit' class='btn btn-primary pull-right btn-block' id='submitDimPhase2' name='submitDimPhase2' value='Phase2' />
+        </div>
+        <?php
+    } else {
+        ?>
+        <div class='col'>
+            <input type='hidden' id='dimensionPhase2' name='dimensionPhase2' value='true'/>
+            <input type='hidden' id="dimensionProcess" name='dimensionProcess' value='<?php echo (isset($dimensionProcess)) ? $dimensionProcess : "true"; ?>' />
+            <?php if (!isset($dimensionProcess)) {
+                ?>
+                <input type='submit' class="btn btn-primary pull-right btn-block" id='submitDimension' name='submitDimension' value='Next' />
+
+                <?php
+            }
+            ?>
+        </div>
+        <?php
+    }
+    ?>
+</div>
