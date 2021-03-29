@@ -13,8 +13,8 @@ class Dbh {
 //                $this->servername = "10.10.1.2";
 		$this->username = "root";
 		$this->password = "5105458";
-//		$this->dbname = "phhsystem";
-		$this->dbname = "newphhsystem";
+		$this->dbname = "phhsystem";
+//		$this->dbname = "newphhsystem";
 		$this->charset = "utf8";
 
 		try {
